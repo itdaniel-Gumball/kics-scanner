@@ -5,37 +5,33 @@ let busy = false;
 
 async function startScanner() {
 
-    result.innerHTML = "Membuka kamera...";
+    result.innerHTML = "📷 Membuka kamera...";
 
     scanner = new Html5Qrcode("reader");
 
     try {
 
         await scanner.start(
-
             {
                 facingMode: "environment"
             },
-
             {
                 fps: 10,
                 qrbox: 250
             },
-
             onScanSuccess
-
         );
 
-        result.innerHTML = "Arahkan QR ke kamera";
+        result.innerHTML = "✅ Arahkan QR ke kamera";
 
-    }
+    } catch (err) {
 
-    catch (err) {
+        console.error(err);
 
         result.innerHTML = `
             <div class="error">
-                <h3>Kamera gagal dibuka</h3>
-                <p>${err}</p>
+                <h2>❌ Kamera Gagal</h2>
+                <p>${err.message || err}</p>
             </div>
         `;
 
@@ -49,16 +45,21 @@ async function onScanSuccess(decodedText) {
 
     busy = true;
 
-    result.innerHTML = "Memproses...";
+    result.innerHTML = "<h2>⏳ Memproses...</h2>";
 
     try {
+
+        console.log("QR:", decodedText);
+        console.log("API:", CONFIG.apiUrl);
 
         const response = await fetch(CONFIG.apiUrl, {
 
             method: "POST",
 
+            redirect: "follow",
+
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "text/plain;charset=UTF-8"
             },
 
             body: JSON.stringify({
@@ -67,18 +68,25 @@ async function onScanSuccess(decodedText) {
 
         });
 
-        const data = await response.json();
+        console.log("Status:", response.status);
+
+        const text = await response.text();
+
+        console.log("Response:", text);
+
+        const data = JSON.parse(text);
 
         showResult(data);
 
     }
-
     catch (err) {
+
+        console.error(err);
 
         result.innerHTML = `
             <div class="error">
-                <h2>Server Error</h2>
-                <p>${err}</p>
+                <h2>❌ Server Error</h2>
+                <p>${err.message}</p>
             </div>
         `;
 
@@ -91,25 +99,22 @@ async function onScanSuccess(decodedText) {
 function showResult(data) {
 
     if (navigator.vibrate) {
-
-        navigator.vibrate(200);
-
+        navigator.vibrate(150);
     }
 
-    if (data.status == "SUCCESS") {
+    if (data.status === "SUCCESS") {
 
         result.innerHTML = `
             <div class="success">
                 <h2>✅ BERHASIL</h2>
                 <h3>${data.student.nama}</h3>
                 <h3>${data.student.kelas}</h3>
-                <p>${data.time}</p>
+                <h3>${data.time}</h3>
             </div>
         `;
 
     }
-
-    else if (data.status == "ALREADY") {
+    else if (data.status === "ALREADY") {
 
         result.innerHTML = `
             <div class="warning">
@@ -120,12 +125,20 @@ function showResult(data) {
         `;
 
     }
-
-    else {
+    else if (data.status === "NOT_FOUND") {
 
         result.innerHTML = `
             <div class="error">
                 <h2>❌ Data Tidak Ditemukan</h2>
+            </div>
+        `;
+
+    }
+    else {
+
+        result.innerHTML = `
+            <div class="error">
+                <h2>❌ ${data.message}</h2>
             </div>
         `;
 
@@ -135,7 +148,7 @@ function showResult(data) {
 
         busy = false;
 
-        result.innerHTML = "Arahkan QR ke kamera";
+        result.innerHTML = "✅ Arahkan QR ke kamera";
 
     }, 2000);
 

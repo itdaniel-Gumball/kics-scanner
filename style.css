@@ -1,1 +1,43 @@
+body{
+    margin:0;
+    padding:20px;
+    background:#f4f6f9;
+    font-family:Arial,sans-serif;
+}
 
+.container{
+    max-width:700px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+}
+
+#reader{
+    width:100%;
+    max-width:500px;
+    margin:auto;
+}
+
+#result{
+    margin-top:20px;
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    text-align:center;
+    font-size:20px;
+    box-shadow:0 2px 10px rgba(0,0,0,.1);
+}
+
+.success{
+    color:green;
+}
+
+.warning{
+    color:orange;
+}
+
+.error{
+    color:red;
+}
